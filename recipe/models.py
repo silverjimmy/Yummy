@@ -6,7 +6,10 @@ import os
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://postgres:admin1234@localhost/finalapi"
+if app.config['Testing'] == True:
+    app.config["SQLALCHEMY_DATABASE_URL"] = "postgresql://postgres:admin1234@localhost/sample_db"
+else:
+    app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://postgres:admin1234@localhost/finalapi"
 db = SQLAlchemy(app)
 
 
