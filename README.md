@@ -59,3 +59,7 @@ pytest tests
 | `/recipes/<id>/categories/` | `POST` |  Create categories in a recipe list |
 | `/recipes/<id>/categories/<catergory_id>/` | `DELETE`| Delete a category in a recipe list|
 | `/recipes/<id>/categories/<catergory_id>/` | `PUT`| update a recipe list category details|
+
+
+##Note
+Remember to set up ur postgres according to your system config for postrges.
