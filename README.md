@@ -2,7 +2,7 @@
 
 #Yummy Recipe Api - FLASK
 
-[![Build Status](https://travis-ci.org/silverjimmy/Yummy_Recipe_Api.svg?branch=master)](https://travis-ci.org/silverjimmy/Yummy_Recipe_Api)
+[![Build Status](https://travis-ci.org/silverjimmy/Yummy_Recipe_Api.svg?branch=development)](https://travis-ci.org/silverjimmy/Yummy_Recipe_Api)
 
 ## Introduction
 Flask API
