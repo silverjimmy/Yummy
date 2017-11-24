@@ -35,8 +35,8 @@ def login():
     generates token and sends to the user if valid user"""
     if not request.json:
         return jsonify({"message": "Expected username and password sent via JSON"}), 400
-    username = request.json.get("username")
-    password = request.json.get("password")
+    username = request.json.get("username").strip()
+    password = request.json.get("password").strip()
     if not username or not password:
         """ we expect the username and password passed as json """
         return jsonify({"message": "Requires username and password to be\
@@ -56,12 +56,15 @@ def register():
     checks credentials provided against existing ones
     makes sure every user is unique
     sends auth token to the user"""
-    if not request.json:
-        return jsonify({"message": "Expected username and password sent via JSON"}), 400
-    username = request.json.get("username")
-    password = request.json.get("password")
+    if not request.json or request.json.get("username").strip() is None or request.json.get("username").strip() == "":
+        return jsonify({"message": "Invalid Data"}), 400
+        return jsonify({"message": "Invalid Data"}), 500
+    username = request.json.get("username").strip()
+    password = request.json.get("password").strip()
     if not username or not password:
         return jsonify({"message": "Requires username and password to be provided"}), 401
+    if request.json.get("password") is None:
+        return jsonify({"message":"Expected password"})
     user = db.session.query(User).filter_by(username=username).first()
     if user:
         return jsonify({"message": "Cannot create user, already exists"}), 403
@@ -79,7 +82,7 @@ def create_recipe():
     """ This function creates a new recipe.
     make sure the user has a valid token before creating"""
     # we are logged in, we have access to g, where we have a field, g.userid
-    if not request.json or request.json.get("name") is None or request.json.get("name") == "":
+    if not request.json or request.json.get("name").strip() is None or request.json.get("name").strip() == "":
         return jsonify({
             "message": "Please supply recipe name"
             }), 400
@@ -87,7 +90,7 @@ def create_recipe():
     if recipe:
         return jsonify({
             "message": "The Recipe name you are using has already been saved"}), 400
-    recipe = Recipe(name=request.json.get("name"), date_created=datetime.now(), created_by=g.user.id, date_modified=datetime.now())
+    recipe = Recipe(name=request.json.get("name").strip(), date_created=datetime.now(), created_by=g.user.id, date_modified=datetime.now())
     db.session.add(recipe)
     db.session.commit()
     return jsonify({"message": "Recipe Saved"}), 201
