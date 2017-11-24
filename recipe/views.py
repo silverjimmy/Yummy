@@ -9,7 +9,6 @@ from .models import User, Recipe, Categories
 auth = HTTPTokenAuth(scheme="Bearer")
 db.create_all()
 
-
 @auth.verify_token
 def verify_auth_token(token):
     """ login_required is going to call verify token since this is an instance
@@ -28,7 +27,6 @@ def verify_auth_token(token):
         return False
     g.user = db.session.query(User).filter_by(id=userid).first()
     return True
-
 
 @app.route("/auth/login", methods=["POST"])
 def login():
@@ -49,6 +47,7 @@ def login():
     # create user and store in db
     token = new_user.generate_auth_token()
     return json.dumps({"token": token.decode("utf-8"), "id": new_user.id}), 200
+
 
 
 @app.route("/auth/register", methods=["POST"])
