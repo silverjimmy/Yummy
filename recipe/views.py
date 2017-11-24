@@ -149,7 +149,7 @@ def get_recipe(catergoryid):
 @auth.login_required
 def update_recipe(id):
     """ Update name or done status of a recipe """
-    if not request.json or request.json.get("name") is None or request.json.get("name") == "":
+    if not request.json or request.json.get("name").strip() is None or request.json.get("name").strip() == "":
         return jsonify({"message": "you need to supply new edits in json"}), 400
     recipe = db.session.query(Recipe).filter_by(id=id).first()
     if not recipe:
@@ -183,7 +183,7 @@ def create_new_catergory(id):
     if not request.json:
         return jsonify(
             {"message": "you need to supply name of new category as JSON"}), 400
-    catergory_name = request.json.get("name")
+    catergory_name = request.json.get("name").strip()
     if catergory_name is None or catergory_name == "":
         return jsonify(
             {"message": "you need to supply name of new category as JSON"}
@@ -212,7 +212,7 @@ def update_recipe_list_catergory(id, catergory_id):
     if not request.json:
         return jsonify(
             {"message": "you need to supply new name as JSON"}), 400
-    catergory_name = request.json.get("name")
+    catergory_name = request.json.get("name").strip()
     done = request.json.get("done")
     if catergory_name is None or catergory_name == "":
         return jsonify({"message": "you need to supply new name as JSON"}), 400
