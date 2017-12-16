@@ -8,7 +8,7 @@ class BaseTestCase(unittest.TestCase):
     def setUp(self):
         """ Default configuration. """
         app.config["TESTING"] = True        
-        app.config["SQLALCHEMY_DATABASE_URL"] = "postgresql://postgres:admin1234@localhost/set_db"
+        app.config["SQLALCHEMY_DATABASE_URL"] = "postgresql://postgres:admin1234@localhost/main_db"
         """ Update to use fixtures instead """
         db.drop_all()
         db.create_all()  # create all tables based
