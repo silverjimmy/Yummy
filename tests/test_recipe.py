@@ -160,7 +160,7 @@ class TestCategory(BaseTestCase):
             headers={"Authorization": "Bearer {}".format(self.token)})
         self.assertEqual(response.status_code, 200)
         r = db.session.query(Category).filter_by(name="testcategory").first()
-        self.assertTrue(r is None)
+        self.assertFalse(r is None)
 
     def test_delete_category_invalid_id(self):
         self.login_user()
