@@ -3,7 +3,7 @@ from flask import request, jsonify, g, json
 from flask_httpauth import HTTPTokenAuth
 from . import app
 from .models import db
-from .models import User, Recipe, Categories
+from .models import User, Category, Recipes
 
 
 auth = HTTPTokenAuth(scheme="Bearer")
@@ -27,6 +27,39 @@ def verify_auth_token(token):
         return False
     g.user = db.session.query(User).filter_by(id=userid).first()
     return True
+@app.route("/auth/register", methods=["POST"])
+def register():
+    """ This function registers a new user.
+    checks credentials provided against existing ones
+    makes sure every user is unique
+    sends auth token to the user"""
+    if not request.json:
+        return jsonify({"message": "Details missing"}), 400
+    
+    username = request.json.get("username")
+    password = request.json.get("password")
+    email = request.json.get("email")
+
+    if username is None or username.replace(" ", "") == "": 
+        return jsonify({"message":"User regisration details incorrect"}),401
+
+    if request.json.get("password") is None or request.json.get("password").replace(" ", "") == "":
+        return jsonify({"message":"User regisration details incorrect"}),401
+
+    if request.json.get("email") is None or request.json.get("email").replace(" ", "") == "":
+        return jsonify({"message":"User regisration details incorrect"}),401
+
+    user = db.session.query(User).filter_by(email=email).first()
+    if user:
+        return jsonify({"message": "Cannot create user, User already exists"}), 403
+    username
+    new_user = User(username, password, email)
+    db.session.add(new_user)
+    db.session.commit()
+    token = new_user.generate_auth_token()
+    # return json.dumps({"token": str(token)}), 201
+    return json.dumps({"token": token.decode('utf-8')}), 201
+
 
 @app.route("/auth/login", methods=["POST"])
 def login():
@@ -49,57 +82,33 @@ def login():
     return json.dumps({"token": token.decode("utf-8"), "id": new_user.id}), 200
 
 
-
-@app.route("/auth/register", methods=["POST"])
-def register():
-    """ This function registers a new user.
-    checks credentials provided against existing ones
-    makes sure every user is unique
-    sends auth token to the user"""
-    if not request.json or request.json.get("username").strip() is None or request.json.get("username").strip() == "":
-        return jsonify({"message": "Invalid Data"}), 400
-        return jsonify({"message": "Invalid Data"}), 500
-    username = request.json.get("username").strip()
-    password = request.json.get("password").strip()
-    if not username or not password:
-        return jsonify({"message": "Requires username and password to be provided"}), 401
-    if request.json.get("password") is None:
-        return jsonify({"message":"Expected password"})
-    user = db.session.query(User).filter_by(username=username).first()
-    if user:
-        return jsonify({"message": "Cannot create user, already exists"}), 403
-    new_user = User(username, password)
-    db.session.add(new_user)
-    db.session.commit()
-    token = new_user.generate_auth_token()
-    # return json.dumps({"token": str(token)}), 201
-    return json.dumps({"token": token.decode('utf-8')}), 201
-
-
-@app.route("/recipes", methods=["POST"])
+@app.route("/categories", methods=["POST"])
 @auth.login_required
-def create_recipe():
-    """ This function creates a new recipe.
+def create_category():
+    """ This function creates a new category.
     make sure the user has a valid token before creating"""
     # we are logged in, we have access to g, where we have a field, g.userid
-    if not request.json or request.json.get("name").strip() is None or request.json.get("name").strip() == "":
+    if not request.json or request.json.get("name") is None or request.json.get("name").replace(" ", "") == "" or request.json.get("description") is None or request.json.get("description").replace(" ", "") == "":
         return jsonify({
-            "message": "Please supply recipe name"
+            "message": "Please supply Required Details"
             }), 400
-    recipe = db.session.query(Recipe).filter_by(created_by=g.user.id, name=request.json.get("name")).first()
-    if recipe:
+
+    
+    category = db.session.query(Category).filter_by(created_by=g.user.id, name=request.json.get("name")).first()
+    if category:
         return jsonify({
-            "message": "The Recipe name you are using has already been saved"}), 400
-    recipe = Recipe(name=request.json.get("name").strip(), date_created=datetime.now(), created_by=g.user.id, date_modified=datetime.now())
-    db.session.add(recipe)
+            "message": "The Category name you are using has already been saved"}), 400
+    description = request.json.get("description")
+    category = Category(name=request.json.get("name").strip(), description = request.json.get("description").strip(), date_created=datetime.now(), created_by=g.user.id, date_modified=datetime.now())
+    db.session.add(category)
     db.session.commit()
-    return jsonify({"message": "Recipe Saved"}), 201
+    return jsonify({"message": "Category Saved"}), 201
 
 
-@app.route("/recipes", methods=["GET"])
+@app.route("/categories", methods=["GET"])
 @auth.login_required
-def list_created_recipe():
-    """ Return the recipes belonging to the user.
+def list_created_category():
+    """ Return the categories belonging to the user.
     determine user from the supplied token """
     search_name = False
     search_limit = False
@@ -108,164 +117,163 @@ def list_created_recipe():
     if request.args.get("limit"):
         search_limit = True
     if search_name and search_limit:
-        recipe = db.session.query(Recipe).filter_by(created_by=g.user.id).filter(Recipe.name.like("%{}%".format(request.args.get("q")))).limit(request.args.get("limit")).all()
+        category = db.session.query(Category).filter_by(created_by=g.user.id).filter(Category.name.like("%{}%".format(request.args.get("q")))).limit(request.args.get("limit")).all()
     elif search_name:
-        recipe = db.session.query(Recipe).filter(Recipe.created_by == g.user.id, Recipe.name.like('%{}%'.format(request.args.get("q")))).all()
+        category = db.session.query(Category).filter(Category.created_by == g.user.id, Category.name.like('%{}%'.format(request.args.get("q")))).all()
     elif search_limit:
-        recipe = db.session.query(Recipe).filter_by(created_by=g.user.id).limit(request.args.get("limit")).all()
+        category = db.session.query(Category).filter_by(created_by=g.user.id).limit(request.args.get("limit")).all()
     else:
-        recipe = db.session.query(Recipe).filter_by(created_by=g.user.id).all()
+        category = db.session.query(Category).filter_by(created_by=g.user.id).all()
     ls = []
-    if not recipe:
+    if not category:
         if not search_name:
             return jsonify(
-                {"message": "Need to supply name of category you are looking for"}
+                {"message": "Need to supply name of recipe you are looking for"}
                 ), 400
         else:
             return jsonify(
-                {"message": "No category with that name belonging to user"}
+                {"message": "No recipe with that name belonging to user"}
                 ), 401
-    for category in recipe:
-        ls.append(category.returnthis())
+    for recipe in category:
+        ls.append(recipe.returnthis())
     return jsonify(ls), 200
 
 
-@app.route("/recipes/<catergoryid>", methods=["GET"])
+@app.route("/categories/<id>", methods=["GET"])
 @auth.login_required
-def get_recipe(catergoryid):
-    """ Return the certain recipe for user. """
+def get_category(id):
+    """ Return the certain category for user. """
     ls = []
-    recipe = db.session.query(Recipe).get(catergoryid)
-    if not recipe:
-        return jsonify({"message": "No category with that id"}), 400
-    if not recipe.created_by == g.user.id:
+    category = db.session.query(Category).get(id)
+    if not category:
+        return jsonify({"message": "No recipe with that id"}), 400
+    if not category.created_by == g.user.id:
         return jsonify({
-            "message": "That category does not belong to you "}), 403
-    ls.append(recipe.returnthis())
+            "message": "That recipe does not belong to you "}), 403
+    ls.append(category.returnthis())
     return jsonify(ls), 200
 
 
-@app.route("/recipes/<id>", methods=["PUT"])
+@app.route("/categories/<id>", methods=["PUT"])
 @auth.login_required
-def update_recipe(id):
-    """ Update name or done status of a recipe """
-    if not request.json or request.json.get("name").strip() is None or request.json.get("name").strip() == "":
+def update_category(id):
+    """ Update a category """
+    if not request.json or request.json.get("name") is None or request.json.get("name").replace(" ", "") == "":
         return jsonify({"message": "you need to supply new edits in json"}), 400
-    recipe = db.session.query(Recipe).filter_by(id=id).first()
-    if not recipe:
-        return jsonify({"message": "The category you request does not exist"}), 400
-    if not recipe.created_by == g.user.id:
-        return jsonify({"message": "You don't have permission to modify this category"}), 403
-    recipe.name = request.json.get("name")
-    recipe.date_modified = datetime.now()
+    category = db.session.query(Category).filter_by(id=id).first()
+    if not category:
+        return jsonify({"message": "The recipe you request does not exist"}), 400
+    if not category.created_by == g.user.id:
+        return jsonify({"message": "You don't have permission to modify this recipe"}), 403
+    category.name = request.json.get("name")
+    category.description = request.json.get("description")
+    category.date_modified = datetime.now()
     db.session.commit()
-    return jsonify({"message": "successful update"}), 200
+    return jsonify({"message": "category successful update"}), 200
+  
 
-
-@app.route("/recipes/<id>", methods=["DELETE"])
+@app.route("/categories/<id>", methods=["DELETE"])
 @auth.login_required
-def delete_recipe(id):
-    recipe = db.session.query(Recipe).filter_by(id=id).first()
-    if not recipe:
-        return jsonify({"message": "The category you request does not exist"}), 400
-    if not recipe.created_by == g.user.id:
+def delete_category(id):
+    category = db.session.query(Category).filter_by(id=id).first()
+    if not category:
+        return jsonify({"message": "The Category you requested does not exist"}), 400
+    if not category.created_by == g.user.id:
         return jsonify(
-            {"message": "You don't have permission to modify this category"}), 400
-    db.session.delete(recipe)
-    db.session.commit()
-    return jsonify({"message": "Deleted recipe"}), 200
+            {"message": "You don't have permission to modify this Category"}), 400
 
+        db.session.delete(category)
+        db.session.commit()
+    return jsonify({"message": "Successfully deleted Category"}), 200  
+        # status code - not found
 
-@app.route("/recipes/<id>/categories", methods=["POST"])
+@app.route("/categories/<id>/recipe", methods=["POST"])
 @auth.login_required
-def create_new_catergory(id):
-    """ This function created a new category in the recipe."""
+def create_new_recipe(id):
+    """ This function created a new recipe in the category."""
     if not request.json:
         return jsonify(
-            {"message": "you need to supply name of new category as JSON"}), 400
-    catergory_name = request.json.get("name").strip()
-    if catergory_name is None or catergory_name == "":
+            {"message": "you need to supply name of new recipe as JSON"}), 400
+    recipe_name = request.json.get("name")
+    desc = request.json.get("description")
+    if recipe_name is None or recipe_name.replace(" ", "") == "":
         return jsonify(
-            {"message": "you need to supply name of new category as JSON"}
+            {"message": "you need to supply name of new recipe as JSON"}
             ), 400
-    recipe = db.session.query(Categories).filter_by(name=catergory_name).first()
-    if recipe:
-        return jsonify({"message": "User has already created that category"}), 400
-    recipe = db.session.query(Recipe).filter_by(id=id).first()
-    if not recipe:
-        return jsonify({"message": "Recipe does not exist"}), 400
-    new_catergory = Categories(
-        name=catergory_name,
+    if desc is None or desc.replace(" ", "") == "":
+        return jsonify(
+            {"message": "you need to supply name of recipe description as JSON"}
+            ), 400
+    category = db.session.query(Recipes).filter_by(name=recipe_name).first()
+    if category:
+        return jsonify({"message": "User has already created that recipe"}), 400
+    category = db.session.query(Category).filter_by(id=id).first()
+    if not category:
+        return jsonify({"message": "Category does not exist"}), 400
+    new_recipe = Recipes(
+        name=recipe_name.strip(),
+        description=desc.strip(),
         date_created=datetime.now(),
         date_modified=datetime.now(),
-        recipeid=id
+        categoryid=id
         )
-    db.session.add(new_catergory)
+    db.session.add(new_recipe)
     db.session.commit()
-    return jsonify({"message": "Successfuly created category"}), 200
+    return jsonify({"message": "Successfully created recipe"}), 200
 
-
-@app.route("/recipes/<id>/categories/<catergory_id>", methods=["PUT"])
+@app.route("/categories/<id>/recipe/<recipe_id>", methods=["PUT"])
 @auth.login_required
-def update_recipe_list_catergory(id, catergory_id):
-    """ Update name and done status of a recipe list category"""
+def update_category_list_recipe(id, recipe_id):
+    """ Update name and done status of a category list recipe"""
     if not request.json:
         return jsonify(
             {"message": "you need to supply new name as JSON"}), 400
-    catergory_name = request.json.get("name").strip()
+    recipe_name = request.json.get("name").strip()
     done = request.json.get("done")
-    if catergory_name is None or catergory_name == "":
+    if recipe_name is None or recipe_name == "":
         return jsonify({"message": "you need to supply new name as JSON"}), 400
-    recipe = db.session.query(Recipe).filter_by(id=id).first()
-    if not recipe:
+    category = db.session.query(Category).filter_by(id=id).first()
+    if not category:
         return jsonify({
-            "message": "The recipe does not exist, it was probably deleted"
+            "message": "The category does not exist, it was probably deleted"
             }), 400
-    recipetlistcatergory = db.session.query(Categories).filter_by(id=catergory_id).first()
-    if not recipetlistcatergory:
+    listrecipe = db.session.query(Recipes).filter_by(id=recipe_id).first()
+    if not listrecipe:
         return jsonify(
-            {"message": "Category does not exist, no category with that id"}
+            {"message": "Recipe does not exist, no recipe with that id"}
             ), 400
-    if recipetlistcatergory.name == catergory_name:
+    if listrecipe.name == recipe_name:
         return jsonify(
             {"message": "No change to be recorded, set a new value for whatever you want to update"}
             ), 400
-    if done:
-        if done.lower() == "true":
-            recipetlistcatergory.done = True
-        else:
-            recipetlistcatergory.done = False
-    recipetlistcatergory.name = catergory_name
-    recipetlistcatergory.date_modified = datetime.now()
+
+    listrecipe.name = recipe_name
+    listrecipe.date_modified = datetime.now()
     db.session.commit()
-    return jsonify({"message": "Successfully updated category"}), 200
+    return jsonify({"message": "Successfully updated recipe"}), 200
 
 
-@app.route("/recipes/<id>/categories/<catergory_id>", methods=["DELETE"])
+@app.route("/categories/<id>/recipe/<recipe_id>", methods=["DELETE"])
 @auth.login_required
-def delete_recipe_list_catergory(id, catergory_id):
-    recipe = db.session.query(Recipe).filter_by(id=id).first()
+def delete_recipe_list_recipe(id, recipe_id):
+    category = db.session.query(Category).filter_by(id=id).first()
+    if not category:
+        return jsonify({
+            "message": "The category does not exist, it was probably deleted"
+            }), 400
+    recipe = db.session.query(Recipes).filter_by(id=recipe_id).first()
     if not recipe:
         return jsonify(
-            {"message": "Recipe does not exist, cannot delete"}
+            {"message": "Recipe does not exist, no recipe with that id"}
             ), 400
-    if not recipe.created_by == g.user.id:
-        return jsonify({
-            "message": "You dont own the recipe, cannot delete"}), 401
-    recipecatergory = db.session.query(Categories).filter_by(id=catergory_id).first()
-    if not recipecatergory:
-        return jsonify({"message": "User does not have that category, cannot delete"}), 400
-    db.session.delete(recipecatergory)
+    db.session.delete(recipe)
     db.session.commit()
-    return jsonify({"message": "Successfully deleted category"}), 200
-
-
-@app.errorhandler(500)
-def handle500(e):
-    db.session.rollback()
-    return jsonify({"messgae": "Error 500!!"}), 500
-
+    return jsonify({"message": "Successfully deleted recipe"}), 200
 
 @app.errorhandler(404)
 def handle404(e):
     return jsonify({"message": "Invalid endpoint"}), 404
+
+@app.errorhandler(400)
+def handle400(e):
+    return jsonify({"message": "Missing details"}), 400
