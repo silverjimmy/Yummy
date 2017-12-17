@@ -1,9 +1,10 @@
 language: python
 python:
-    - "2.7.12"
+    - "3.6.3"
 # Install all dependencies
 install:
     - pip install -r requirements.txt
+    - pip install pytest-cov
 
 services:
     - postgresql
@@ -12,6 +13,6 @@ before_script:
     - psql -c 'create database sample_db;' -U postgres
 # command to run tests
 script:
-    - pytest --cov=./recipe/
+    - pytest --cov=.
 after_success:
     - coveralls
