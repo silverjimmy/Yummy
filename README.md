@@ -1,7 +1,7 @@
 # Challange3
 
 #Yummy Category Api - FLASK
-https://travis-ci.org/silverjimmy/Yummy_Recipe_Api.svg?branch=development
+[![Build Status](https://travis-ci.org/silverjimmy/Yummy_Recipe_Api.svg?branch=development)](https://travis-ci.org/silverjimmy/Yummy_Recipe_Api)
 
 ## Introduction
 Flask API
