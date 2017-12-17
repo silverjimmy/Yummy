@@ -13,59 +13,59 @@ class TestLogin(BaseTestCase):
 
     def test_login(self):
         # attempt to create new valid user and login
-        credentials = {"username": "admin", "password": "admin"}
+        credentials = {"username": "admin", "password": "admin", "email": "admin@gmail.com"}
         response = self.client.post("/auth/login", data=json.dumps(credentials), content_type="application/json")
         self.assertTrue(response.status_code, 200)
 
     def test_login_no_username(self):
-        credentials = {"username": "", "password": "admin"}
+        credentials = {"username": "", "password": "admin", "email": "admin@gmail.com"}
         response = self.client.post("/auth/login", data=json.dumps(credentials), content_type="application/json")
         self.assertEqual(response.status_code, 401)
         self.assertTrue(json.loads(response.data))  # test return JSON err msg
 
     def test_login_no_password(self):
-        credentials = {"username": "admin", "password": ""}
+        credentials = {"username": "admin", "password": "", "email": "admin@gmail.com"}
         response = self.client.post("/auth/login", data=json.dumps(credentials), content_type="application/json")
         self.assertEqual(response.status_code, 401)
         self.assertTrue(json.loads(response.data))  # test return JSON err msg
 
     def test_login_no_credentials(self):
-        credentials = {"username": "", "password": ""}
+        credentials = {"username": "", "password": "", "email": ""}
         response = self.client.post("/auth/login", data=json.dumps(credentials), content_type="application/json")
         self.assertEqual(response.status_code, 401)
         self.assertTrue(json.loads(response.data))  # test return JSON err msg
 
     def test_login_no_required_field(self):
-        credentials = {"username": "andrew"}
+        credentials = {"username": "", "password": "", "email": ""}
         response = self.client.post("/auth/login", data=json.dumps(credentials), content_type="application/json")
         self.assertEqual(response.status_code, 401)
         self.assertTrue(json.loads(response.data))  # test return JSON err msg
 
     def test_register_user(self):
-        credentials = {"username": "andrew", "password": "andrew"}  # this should be the second user we are registering
+        credentials = {"username": "andrew", "password": "andrew", "email": "andrew@gmail.com"}  # this should be the second user we are registering
         response = self.client.post("/auth/register", data=json.dumps(credentials), content_type="application/json")
         self.assertEqual(response.status_code, 201)
 
     def test_register_user_no_username(self):
-        credentials = {"username": "", "password": "andrew"}  # this should be the second user we are registering
+        credentials = {"username": "", "password": "andrew", "email": "andrew@gmail.com"}  # this should be the second user we are registering
         response = self.client.post("/auth/register", data=json.dumps(credentials), content_type="application/json")
         self.assertEqual(response.status_code, 401)
         self.assertTrue(json.loads(response.data))  # test return JSON err msg
 
     def test_register_user_pass_no_password(self):
-        credentials = {"username": "andrew", "password": ""}  # this should be the second user we are registering
+        credentials = {"username": "andrew", "password": "", "email": "andrew@gmail.com"}  # this should be the second user we are registering
         response = self.client.post("/auth/register", data=json.dumps(credentials), content_type="application/json")
         self.assertEqual(response.status_code, 401)
         self.assertTrue(json.loads(response.data))
 
     def test_register_user_pass_no_username_or_password(self):
-        credentials = {"username": "", "password": ""}  # this should be the second user we are registering
+        credentials = {"username": "", "password": "", "email": ""}  # this should be the second user we are registering
         response = self.client.post("/auth/register", data=json.dumps(credentials), content_type="application/json")
         self.assertEqual(response.status_code, 401)
         self.assertTrue(json.loads(response.data))  # test return JSON err msg
 
     def test_register_with_existing_username(self):
-        credentials = {"username": "admin", "password": "admin"}  # this should be the second user we are registering
+        credentials = {"username": "admin", "password": "admin", "email": "admin@gmail.com"}  # this should be the second user we are registering
         response = self.client.post("/auth/register", data=json.dumps(credentials), content_type="application/json")
         self.assertEqual(response.status_code, 403)
         self.assertTrue(json.loads(response.data))  # test return JSON err msg
