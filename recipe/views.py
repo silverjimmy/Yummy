@@ -157,7 +157,7 @@ def get_category(id):
 @app.route("/categories/<id>", methods=["PUT"])
 @auth.login_required
 def update_category(id):
-    """ Update a category """
+    """ Update a category using the assigned category"""
     if not request.json or request.json.get("name") is None or request.json.get("name").replace(" ", "") == "":
         return jsonify({"message": "you need to supply new edits in json"}), 400
     category = db.session.query(Category).filter_by(id=id).first()
@@ -175,6 +175,7 @@ def update_category(id):
 @app.route("/categories/<id>", methods=["DELETE"])
 @auth.login_required
 def delete_category(id):
+    """ Delete a category using the assigned category id"""
     category = db.session.query(Category).filter_by(id=id).first()
     if not category:
         return jsonify({"message": "The Category you requested does not exist"}), 400
@@ -256,6 +257,7 @@ def update_category_list_recipe(id, recipe_id):
 @app.route("/categories/<id>/recipe/<recipe_id>", methods=["DELETE"])
 @auth.login_required
 def delete_recipe_list_recipe(id, recipe_id):
+    """ This deletes a category recipe as it picks up the recipe_id and category id."""
     category = db.session.query(Category).filter_by(id=id).first()
     if not category:
         return jsonify({
