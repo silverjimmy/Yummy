@@ -4,15 +4,14 @@ python:
 # Install all dependencies
 install:
     - pip install -r requirements.txt
-    - pip install coveralls
 
 services:
     - postgresql
 # command to create database
 before_script:
-    - psql -c 'create database set_db;' -U postgres
+    - psql -c 'create database sample_db;' -U postgres
 # command to run tests
 script:
-    - nosetests --with-coverage --cover-erase --cover-package=tests
+    - pytest --cov=./recipe/
 after_success:
     - coveralls
