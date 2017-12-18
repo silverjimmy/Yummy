@@ -5,7 +5,7 @@ python:
 install:
     - pip install -r requirements.txt
     - pip install pytest-cov
-    - pip install coverage
+    - pip install coveralls
 
 services:
     - postgresql
@@ -14,6 +14,6 @@ before_script:
     - psql -c 'create database main_db;' -U postgres
 # command to run tests
 script:
-    - pytest --cov=.
+    - py.test --cov=recipe tests/
 after_success:
     - coveralls
