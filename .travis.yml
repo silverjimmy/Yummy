@@ -4,6 +4,7 @@ python:
 # Install all dependencies
 install:
     - pip install -r requirements.txt
+    - pip install pytest-cov
     - pip install coveralls
 
 services:
