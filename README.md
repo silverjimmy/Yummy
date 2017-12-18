@@ -4,6 +4,8 @@
 
 [![Build Status](https://travis-ci.org/silverjimmy/Yummy_Recipe_Api.svg?branch=development)](https://travis-ci.org/silverjimmy/Yummy_Recipe_Api)
 
+[![Coverage Status](https://coveralls.io/repos/github/silverjimmy/Yummy_Recipe_Api/badge.svg?branch=development)](https://coveralls.io/github/silverjimmy/Yummy_Recipe_Api?branch=development)
+
 ## Introduction
 Flask API
 
